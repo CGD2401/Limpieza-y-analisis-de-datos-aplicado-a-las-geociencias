@@ -46,7 +46,6 @@ El proyecto consta de los siguientes archivos:
 - `README.md`: contiene información del proyecto
 - `PRA2.rmd`: contiene el código y comentarios de la práctica
 - `PRA2.pdf`: contiene el código y el desarrollo del proyecto
-- `LICENSE.txt`: contiene descripción de la licencia 
 
 
 ## Licencia:
