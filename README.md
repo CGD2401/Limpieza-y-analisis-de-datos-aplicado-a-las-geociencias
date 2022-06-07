@@ -17,11 +17,11 @@
   Junio 2022 </p>
 <hr>
 
-# <b><u> Práctica 1. LIMPIEZA Y ANÁLISIS DE DATOS. ESTUDIO APLICADO A LAS GEOCIENCIAS </b></u>
+# <b><u> Práctica 2. LIMPIEZA Y ANÁLISIS DE DATOS </b></u>
 
 ## <b> Introducción </b>
 
-En este proyecto se elabora un caso práctico de limpieza análisis de datos para la clasificación de facies. 
+En este proyecto se elabora un caso práctico de limpieza análisis de datos orientado al ámbito de las geociencias para la clasificación de facies. 
 
 
 ### Objetivo
@@ -34,7 +34,7 @@ En esta práctica se elabora un caso práctico orientado a identificar los datos
 
 El conjunto de datos se ha tomado de [Kaggle](https://www.kaggle.com/datasets/imeintanis/well-log-facies-dataset)
 
-El origen de los datos procede de un ejercicio de clase de la Universidad de Kansas (Dubois et. al, 2007) sobre Neural Networks y Fuzzy Systems](http://www.people.ku.edu/~gbohling/EECS833/)(*). Los datos están recogidos de 9 pozos del campo de gas más grande de Estados Unidos, Hugoton y Panama field al suroeste de Kansas. 
+El origen de los datos procede de un ejercicio de clase de la [Universidad de Kansas (Dubois et. al, 2007) sobre Neural Networks y Fuzzy Systems](http://www.people.ku.edu/~gbohling/EECS833/). Los datos están recogidos de 9 pozos del campo de gas más grande de Estados Unidos, Hugoton y Panama field al suroeste de Kansas. 
 
 Para más información sobre el origen de los datos se puede consultar la siguiente información: [ Bohling and Dubois (2003)](https://www.kgs.ku.edu/PRS/publication/2003/ofr2003-50.pdf) y [Dubois et al. (2007)](https://www.sciencedirect.com/science/article/pii/S0098300406001956?via%3Dihub)
 
@@ -43,8 +43,8 @@ Para más información sobre el origen de los datos se puede consultar la siguie
 El proyecto consta de los siguientes archivos:
 
 - `facies_data.csv`: dataset 
-- `PRA2.rmd`: contiene el código y comentarios de la práctica
 - `README.md`: contiene información del proyecto
+- `PRA2.rmd`: contiene el código y comentarios de la práctica
 - `PRA2.pdf`: contiene el código y el desarrollo del proyecto
 - `LICENSE.txt`: contiene descripción de la licencia 
 
