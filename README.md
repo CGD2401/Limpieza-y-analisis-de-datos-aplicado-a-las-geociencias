@@ -21,12 +21,13 @@
 
 ## <b> Introducción </b>
 
-En este proyecto se elabora un caso práctico de limpieza análisis de datos orientado al ámbito de las geociencias para la clasificación de facies. 
+En este proyecto se elabora un caso práctico de limpieza y análisis de datos orientado al ámbito de las geociencias para la clasificación de facies donde se pretende identificar los datos relevantes para el estudio y usar las herramientas de integración, limpieza y validación y análisis de las mismas. 
 
 
 ### Objetivo
 
-En esta práctica se elabora un caso práctico orientado a identificar los datos relevantes para un proyecto analítico y usar las herramientas de integración, limpieza, validación y análisis de las mismas orientado al ámbito de las geociencias.
+El objetivo analítico consiste en comprender los datos disponible de los 9 pozos del campo de gas más grande de Estados Unidos, Hugoton y Panama field al suroeste de Kansas y analizar la relevancia de sus variables para la clasificación y predicción de las facies a partir del análisis de modelos supervisados y no supervisados.Para los modelos predictivos se evaluará qué tan bueno es el modelo, mientras que en modelos descriptivos se evalú es qué tan bien se ajusta al dominio descrito.
+Para los modelos predictivos se evalúa qué tan bueno es el modeloa la hora de hacer la predicción, mientras que en modelos descriptivos se evalúa qué tan bien se ajusta el modelo al dominio descrito.
 
 ## Descripción de los datasets:  
 
@@ -37,6 +38,20 @@ El conjunto de datos se ha tomado de [Kaggle](https://www.kaggle.com/datasets/im
 El origen de los datos procede de un ejercicio de clase de la [Universidad de Kansas (Dubois et. al, 2007) sobre Neural Networks y Fuzzy Systems](http://www.people.ku.edu/~gbohling/EECS833/). Los datos están recogidos de 9 pozos del campo de gas más grande de Estados Unidos, Hugoton y Panama field al suroeste de Kansas. 
 
 Para más información sobre el origen de los datos se puede consultar la siguiente información: [ Bohling and Dubois (2003)](https://www.kgs.ku.edu/PRS/publication/2003/ofr2003-50.pdf) y [Dubois et al. (2007)](https://www.sciencedirect.com/science/article/pii/S0098300406001956?via%3Dihub)
+
+## Descripción de las variables del dataset:
+
++ [Facies] (https://glossary.oilfield.slb.com/es/terms/f/facies):	Unidad litoestatrigráfica característica (target)
++ **Formation**:	factor - categórica. Nombre de las formaciones geológicas divididas en 7 unidades estratigráficas C, B5, B4, B3, B2, B1, A1 cada una con un intervalo no marino (SH) sustentado por uno marino (LM).
++ **Well_Name**: Nombre de los pozos.
++ **Depth**: Profundidad de las mediciones (feet)
++ **GR**:	numeric. Registro Gamma ray [0,150 gAPI]
++ **ILD_log10**: Registro de resistividad [0,100 ohm.m]
++ **DeltaPHI**:	 Transformación Delta Phi,  diferencia de porosidad de densidad de neutrones (netron - density porosity) [0.2,-0.6]
++ **PHIND**: Registro de porosidad media de densidad de neutrones. [0.3,-0.1]
++ **PE**:	Efecto fotoeléctrico. [0,20]
++ **NM_M**:	Indicador no marino (NM) - marino (M)
++ **RELPOS**: numeric. Posición relativa. [3,-1]
 
 ## Package content
 
