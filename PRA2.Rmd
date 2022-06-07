@@ -1,0 +1,1712 @@
+---
+title: |
+    | Tipología y ciclo de vida de los datos <br>
+    | Práctica 2: Limpieza y análisis de datos
+subtitle: |
+  | Máster Ciencia de Datos
+author: "CGD"
+date: Junio 2022
+keywords: R, exercises, practice
+documentclass: scrartcl
+classoption:
+  - a4paper
+  - oneside
+fontfamily: lmodern
+fontsize: 11pt
+#geometry: margin=2cm
+geometry: "left=2cm,right=2cm,top=2cm,bottom=1cm"
+number_sections: yes
+csquotes: TRUE
+lang: es-ES
+editor_options: 
+chunk_output_type: inline
+markdown: 
+wrap: 72
+header-includes:
+- \usepackage{titling}
+- \pretitle{\begin{center}\LARGE\includegraphics[width=6cm]{logo5.png}\\[\bigskipamount]}
+- \posttitle{\end{center}}
+output:
+  pdf_document:
+    highlight: tango
+    toc: TRUE
+    toc_depth: 3
+    number_sections: TRUE
+    #template: NULL
+    fig_width: 7
+    fig_height: 6
+    fig_caption: true
+    #includes:
+    #in_header: logo5.html
+  html_document:
+    prettydoc::html_pretty:
+    theme: flatly
+    html_highlight: tango
+    toc: TRUE
+    toc_depth: 3
+    number_sections: FALSE
+    toc_float: TRUE
+    smooth_scroll: TRUE
+    code_folding: show
+    includes:
+      in_header: 75.584-PEC-header.html
+$-- bibliography: scholar.bib
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(fig.align = 'center', echo = TRUE)
+```
+
+<style>
+
+#TOC {
+  color: #087e9c; text-align: left; 
+  }
+#myLogo {
+  float-text: right;
+  width: 150px;
+  }
+</style>
+
+<style type="text/css">
+
+pre:not([class]) {
+  background-color: white;
+}
+.table th:not([align]) {
+  text-align: center;
+}
+</style>
+
+
+<style type="text/css">
+.title {font-size: 24px; color: white; background-color: #263b52; text-align: center; font-family: tahoma;} 
+.subtitle {font-size: 24px; color: #424445;  text-align: center; font-family: tahoma;}  
+.author {font-size: 24px; color: #424445; text-align: left; font-family: calibri light;}
+.date {font-size: 20px; text-align: left; font-family: calibri light;}
+
+h1 {font-size: 28px; color: #066178; text-align: left;}
+h2 {font-size: 26px; color: #105269; text-align: left;}
+h3 {font-size: 22px; color: #087e9c; text-align: left;}
+h4 {font-size: 20px; text-align: left;}
+h5 {font-size: 20px; color: #0b99bd; text-align: left;}
+h6 {font-size: 20px;}
+body {text-align: justify;}
+</style>
+
+<hr style="border:3px solid #7ba5b0"> </hr>
+
+
+
+```{r load libraries, include=FALSE, warning=FALSE}
+
+if (!require('GGally')) install.packages('GGally'); library(GGally)
+if (!require('ggplot2')) install.packages('ggplot2'); library('ggplot2')
+if(!require('Rmisc')) install.packages('Rmisc'); library('Rmisc')
+if(!require('dplyr')) install.packages('dplyr'); library('dplyr')
+if (!require('kableExtra')) install.packages('kableExtra'); library('kableExtra')
+if (!require('data.table')) install.packages('data.table'); library('data.table')
+if(!require('xfun')) install.packages('xfun'); library('xfun')
+if(!require('psych')) install.packages('psych'); library('psych') # His par
+if(!require('gridExtra')) install.packages('gridExtra'); library('gridExtra') # Gráficos grid
+if(!require("corrplot")) install.packages("corrplot"); library("corrplot")
+if (!require('factoextra')) install.packages('factoextra'); library('factoextra') #PCA
+if (!require('FactoMineR')) install.packages('FactoMineR'); library('FactoMineR') #PCA
+if (!require('scales')) install.packages('scales'); library('scales') #PCA
+if (!require('knitr')) install.packages('knitr'); library('knitr') #PCA
+if (!require('utf8')) install.packages('utf8'); library('utf8') #PCA
+if (!require('tidyverse')) install.packages('tidyverse'); library('tidyverse')
+if (!require('viridis')) install.packages('viridis'); library('viridis')
+if (!require('nortest')) install.packages('nortest'); library('nortest') # Lilli.test normalidad
+
+```
+
+\newpage
+
+**Presentación**
+
+En esta práctica se elabora un caso práctico orientado a identificar los datos relevantes para un proyecto analítico y usar las herramientas de integración, limpieza, validación y análisis de las mismas.
+
+**Objetivos**
+
+Los objetivos globales de esta práctica consisten en identificar los datos relevantes del conjunto de datos con el que se va a trabajar y realizar los tratamientos necesarios (integración, limpieza y validación) para llevar a cabo un proyecto analítico. Identificando la mejor representación de los resultados para aportar conclusiones sobre el problema planteado.
+
+***
+\newpage
+
+# **INTRODUCCIÓN: LIMPIEZA Y ANÁLISIS DE DATOS APLICADO A LAS GEOCIENCIAS**:
+
+## **Presentación del dataset**:
+
+Para el presente proyecto se ha seleccionado un conjunto de datos de [Kaggle] (https://www.kaggle.com/datasets/imeintanis/well-log-facies-dataset) orientado al ámbito de las geaociencias por ser de especial interés profesional y personal. 
+
+El origen de los datos procede de un ejercicio de clase de la [Universidad de Kansas (Dubois et. al, 2007) sobre Neural Networks y Fuzzy Systems] (http://www.people.ku.edu/~gbohling/EECS833/)(1). Los datos están recogidos de 9 pozos del campo de gas más grande de Estados Unidos, Hugoton y Panama field al suroeste de Kansas. 
+
+Para más información sobre el origen de los datos se puede consultar la siguiente información: [Bohling and Dubois (2003)] (https://www.kgs.ku.edu/PRS/publication/2003/ofr2003-50.pdf) y [Dubois et al. (2007)] (https://www.sciencedirect.com/science/article/pii/S0098300406001956?via%3Dihub)
+
+A partir de la información recopilada por [Kansas University] (http://www.people.ku.edu/~gbohling/EECS833/Facies_classification_problem_presentation.pdf) y el conjunto de datos disponible, se disponen de 3232 registros y 11 variables (columnas) tanto cualitativas como cuantitativas. Los campos del conjunto de datos  y su descripción se describe a continuación: 
+
++ [Facies] (https://glossary.oilfield.slb.com/es/terms/f/facies):	integer (target) - categórica. Unidad litoestatrigráfica característica:
+    1. (SS) Nonmarine sandstone - Arenisca no marina
+    2. (CSiS) Nonmarine coarse siltstone - Limolita gruesa no marina
+    3. (FSiS) Nonmarine fine siltstone - Limolita fina no marina
+    4. (SiSH) Marine siltstone and shale - Limolita marina y esquisto
+    5. (MS) Mudstone (limestone) - Lutita caliza (matriz-soportado <10% granos con barro micrítico)
+    6. (WS) Wackestone (limestone) - Caliza (matriz-soportado >10% granos con barro micrítico)
+    7. (D) Dolomite - Dolomía
+    8. (PS) Packstone-grainstone (limestone) - Caliza (grano-soportado con-sin grano micrítico)
+    9. (BS) Phylloid-algal bafflestone (limestone) - Carbonato de origen orgánico (alga-filial)
+
++ **Formation**:	factor - categórica. Nombre de las formaciones geológicas divididas en 7 unidades estratigráficas C, B5, B4, B3, B2, B1, A1 cada una con un intervalo no marino (SH) sustentado por uno marino (LM).
+    - C SH: Neva
+    - C LM: Neva
+    - B5 SH: Cottonwood
+    - B5 LM: Cottonwood
+    - B4 SH: Morrill
+    - B4 LM: Morrill
+    - B3 SH: Eiss
+    - B3 LM: Eiss
+    - B2 SH: Middleburg
+    - B2 LM: Middleburg
+    - B1 SH: Crouse
+    - B1 LM: Crouse
+    - A1 SH: Funston
+    - A1 LM: Funston
+    
++ **Well_Name**:	factor - categórica. Nombre de los pozos.
+    - CHURCHMAN BIBLE
+    - CROSS H CATTLE
+    - LUKE G U
+    - NEWBY
+    - NOLAN
+    - Recruit F9
+    - SHANKLE
+    - SHRIMPLIN
+    
++ **Depth**: numeric. Profundidad de las mediciones (feet)
++ **GR**:	numeric. Registro Gamma ray [0,150 gAPI]
++ **ILD_log10**:	numeric. Registro de resistividad [0,100 ohm.m]
++ **DeltaPHI**:	numeric. Transformación Delta Phi,  diferencia de porosidad de densidad de neutrones (netron - density porosity) [0.2,-0.6]
++ **PHIND**:	numeric. Registro de porosidad media de densidad de neutrones. [0.3,-0.1]
++ **PE**:	numeric. Efecto fotoeléctrico. [0,20]
++ **NM_M**:	variable dummy. Indicador no marino (NM) - marino (M)
+    - 1: no marino (NM)
+    - 2: marino (M)
++ **RELPOS**: numeric. Posición relativa. [3,-1]
+
+**Definiciones**:
+
+- **Gamma ray (GR)**: contrasta la radiactividad generalmente baja dentro de los carbonatos con los niveles más altos emitidos por los minerales arcillosos y las fracciones de limo.
+- **Efecto fotoeléctrico (PE)**: función directa del número atómico del agregado de litofacies y puede relacionarse con el contenido mineral.
+- **Resistividad (ILD_log10)**: es sensible tanto al volumen de poro como al contenido de líquido de poro en los carbonatos, así como a la conductividad causada por las propiedades de intercambio catiónico del mineral arcilloso en las litofacies arcillosas.
+- **Transformada Delta Phi (deltaPhi)**: (neutrón menos porosidad de densidad) está altamente correlacionada con la densidad de grano de las litofacies y es otro indicador útil e independiente de la mineralogía.
+
+Nota: Información tomada de: Registros logs, [Kansas University] (https://www.kgs.ku.edu/PRS/publication/2003/ofr2003-30/P2-06.html)
+
+\newpage
+
+## Importancia y objetivos de los análisis
+
+Las mediciones petrofísicas en las paredes de los pozos proporcionan información relevante sobre las propiedades de las rocas en el subsuelo y son una herramienta fundamental y ámpliamente utilizada en proyectos de exploración de hidrocarburos y otros recursos naturales. 
+A partir de los registros de pozo (logs) es posible clasificar y predecir formaciones geológicas (facies) que reflejan condiciones físicas, químicas y biológicas particulares que experimentó la unidad durante el proceso de sedimentación (2). Para estudiar estas facies, se requiere de los registros de pozo y de muestras de roca (testigos) extraidos cada 30 cm. 
+Las facies definen la arquitectura interna del yacimiento. La capacidad de predecir y modelar con precisión la distribución de facies en el yacimiento da como resultado una mejor comprensión de la calidad y el comportamiento del yacimiento. Un modelo de facies preciso será un buen predictor de los volúmenes y el flujo de fluidos en el lugar. (3)
+
+Mediante la identificación, interpretación y correlación de facies y registros de pozo junto con la sísmica (seismic-to-well-tie), es posible comprender la evolución geológica de una zona y evaluar e identificar posibles yacimientos de hidrocarburos y/u otros recursos minerales. 
+
+El objetivo analítico que se persigue conseguir en esta práctica consiste en analizar los datos recogidos de los 9 pozos disponibles con el fin de analizar su relevancia para la clasificación de facies así como la predicción de estas a partir de los datos mediante modelos supervisados y no supervisados.
+Para los modelos predictivos se evaluará qué tan bueno es el modelo mediante predicciones, mientras que en modelos descriptivos lo que se evalúa es qué tan bien se ajusta al dominio descrito.
+    
+
+Nota: parte de la información ha sido tomada de las siguientes fuentes:
+
+- [(1)] (https://github.com/brendonhall/facies_classification/blob/master/Facies%20Classification%20-%20SVM.ipynb)
+
+- [(2)] (https://github-com.translate.goog/mardani72/Facies-Classification-Machine-Learning/blob/master/Facies_Classification_Various_ML_Final.ipynb?_x_tr_sl=auto&_x_tr_tl=es&_x_tr_hl=es) y
+
+- [(3)] (https://www.pdgm.com/Resource-Library/Brochures/Services/Seismic-Facies-Prediction-and-Modeling#:~
+:text=Rock%20facies%20define%20the%20internal,place%20volumes%20and%20fluid%20flow.)
+
+***
+\newpage
+
+# COMPRENSIÓN DE LOS DATOS (Data understanding): 
+
+## Carga y exploración del conjunto de datos
+
+
+    Lectura del fichero y preparación de los datos
+
+El formato del archivo es .csv (*comma-separated-value*). Si se abre el dataset con un editor de texto se observa que los datos están separados por coma (,) y los decimales están representados por puntos (.). Para
+abrir este tipo de archivos en R se utiliza la función **`read.csv()`**.
+
+Nota: Para poder leer el archivo es necesario encontrarnos en el working directory del dataset. Para comprobar esto se utiliza **`getwd()`**, se puede establecer la ruta al dataset mediante **`setwd(ruta_dataset)`**.
+
+```{r rworking directory, eval=FALSE, echo=FALSE}
+getwd()
+```
+
+```{r carga del archivo .csv}
+# Lectura del dataset (se especifican los decimales como punto)
+welldata <- read.csv("facies_data.csv", sep=",", stringsAsFactors=TRUE)
+```
+
+Para comprobar que se ha cargado correctamente el dataset se verifica su dimensión y el nombre de las columnas mediante las funciones **`dim()`** y **`colnames()`** respectivamente.
+
+```{r información del dataset, eval=TRUE, echo=TRUE}
+# Comprobación de la dimensión del dataset
+dim(welldata)
+```
+
+Se observa que se tienen 3232 registros y 11 variables con los siguientes nombres:
+
+```{r}
+# Nombre de las columnas del dataset:
+colnames(welldata)
+```
+
+Una vez cargado el dataset en la memoria, se examina el archivo mediante la función **`summary()`** para obtener un resumen de cada variable, que nos proporciona una descripción del máx, min y cuartiles para las variables cuantitativas y número y tipo de datos, en el caso de variables cuantitavas.
+
+
+```{r exmaninar el dataset}
+# Valores resumen de cada tipo de variable
+summary(welldata)
+```
+
+La función "**str()**" nos proporciona además la estructura de las variables y los datos que la componen.
+
+```{r}
+str(welldata)
+```
+
+Se puede observar que el conjunto de datos tiene 8 variables cuantitativas: `Depth`, `GR`, `ILD_log10`, `DeltaPHI`, `PHIND` `PE`, y `RELPOS`, 1 variable dummy `NM_M.` y 3 variables cualitativas: `Facies`, `Formation`, `Well.Name` que se dividen en diferentes categorías como se muestra a continuación:
+
+```{r Nombre categorias}
+unique(welldata$Formation)
+unique(welldata$Well_Name)
+unique(welldata$Facies)
+```
+
+Es importante revisar las variables y que el tipo de dato se corresponda con el esperado. 
+
+\newpage
+
+## Selección de los datos de interés
+
+Por conversión, se va a modificar el nombre de la variable Well.Name a Well_Name como sigue:
+
+```{r Cambio nombre}
+# Renombrar variable por número de columna:
+colnames(welldata)[3] <- 'Well_Name'
+```
+
+Se añade una columna `Labels` y `Origin` con los nombres abreviados de las Facies y su origen marino (M) y no marino (NM) para facilitar su identificación por nombre y se reordenan las columnas:
+
+```{r}
+# Añadir columna Labels:
+welldata$Labels <- welldata$Facies
+
+# Añadir columna Origin:
+welldata$Origin <- welldata$NM_M
+
+# Reordenación columnas:
+welldata <- welldata %>% select(Facies, Labels, Formation, 
+                                Well_Name, Depth, GR, ILD_log10, 
+                                DeltaPHI, PHIND, PE, NM_M, Origin, RELPOS)
+
+# Se añaden las etiquetas de las Facies a Labels:
+
+welldata$Labels[welldata$Labels == "1"] <- "SS"
+welldata$Labels[welldata$Labels == "2"] <- "CSiS"
+welldata$Labels[welldata$Labels == "3"] <- "FSiS"
+welldata$Labels[welldata$Labels == "4"] <- "SiSH"
+welldata$Labels[welldata$Labels == "5"] <- "MS"
+welldata$Labels[welldata$Labels == "6"] <- "WS"
+welldata$Labels[welldata$Labels == "7"] <- "D"
+welldata$Labels[welldata$Labels == "8"] <- "PS"
+welldata$Labels[welldata$Labels == "9"] <- "BS"
+
+# Se añaden las etiquetas de las Facies a Origin:
+
+welldata$Origin[welldata$Origin == "1"] <- "NM"
+welldata$Origin[welldata$Origin == "2"] <- "M"
+
+# Mostramos dataframe con columnas reordenadas:
+
+df <- data.frame(welldata)
+head(df,  5)
+```
+
+Ahora tenemos un dataframe con 13 columnas y 3232 registros.
+Para este estudio, todas las variables son relevancia por lo que se mantendrán. 
+
+***
+\newpage
+
+# PREPARACIÓN y PREPROCESADO DE LOS DATOS (Data preparation)
+
+En esta primera fase de preparación de los datos se va a comprobar que los datos estén completos, no contengan datos erróneos o incoherencias.
+
+## Valores no disponibles (NA), vaciós o cero:
+
+Lo primero que vamos a comprobar es si existen valores no disponibles (NA) y valores vacios en el dataset y su proporción por columnas a partir de la función de R `colMean()` de la siguiente forma:
+
+```{r Verificación NA y valores vacios}
+# Comprobación de NA:
+sum(is.na(welldata)) 
+
+# Comprobación de valores vaciós:
+sort(colSums(welldata==""), decreasing = TRUE)
+sort(colSums(welldata==" "), decreasing = TRUE)
+
+# Comprobación de valores 0:
+sort(colSums(welldata=="0"), decreasing = TRUE)
+```
+
+
+Se observa que el conjunto de datos no tiene valores no disponibles (NA) ni valores vacios. La variable `DeltaPHI` tiene siete valores que son igual a cero. 
+
+## Detección y tratamiento de outliers:
+
+A continuación estudiamos la presencia de valores extremos mediante la representación gráfica de diagramas de cajas.
+
+```{r echo=FALSE, fig.height=4,fig.width=6, fig.cap="Diagrama de caja: outliers", warning=FALSE}
+# Diagrama de cajas de las variables
+par(mfrow=c(2,4))
+boxplot( welldata$Depth, main="Depth",
+         xlab = "Depth", ylab = "Values",
+         col = "turquoise")
+boxplot( welldata$GR, main="GR",
+         xlab = "GR", ylab = "Values",
+         col = "turquoise")
+boxplot( welldata$ILD_log10, main="ILD_log10",
+         xlab = "ILD_log10", ylab = "Values",
+         col = "turquoise")
+boxplot( welldata$DeltaPHI, main="DeltaPHI",
+         xlab = "DeltaPHI", ylab = "Values",
+         col = "turquoise")
+boxplot( welldata$PHIND, main="PHIND",
+         xlab = "PHIND", ylab = "Values",
+         col = "turquoise")
+boxplot( welldata$PE, main="PE",
+         xlab = "PE", ylab = "Values",
+         col = "turquoise")
+boxplot( welldata$RELPOS, main="RELPOS",
+         xlab = "RELPOS", ylab = "Values",
+         col = "turquoise")
+```
+
+
+De los resultados obtenidos, se observa que las variables `GR`, `ILD_log10`, `DeltaPHI`, `PHIND` y `PE` tienen valores extremos que se deberán tratar. Se observa además que las otras dos variables `Depth` y `RELPOS` no tienen valores extremos lo cual tiene sentido porque corresponden a la profundidad en la que se han medido los registros de pozo y la posición relativa.  
+
+De la información que se dispone, se conoce que los registros de pozo tienen valores correspondientes a los intervalos siguientes:
+
+- `GR` [0, 150]
+- `ILD_log10` [0, 100] -
+- `DeltaPHI` [-0.6, 0.2]
+- `PHIND` [-0.1, 0.3]
+- `PE` [0, 20] -
+
+Verificamos los valores numéricos de los valores extremos y se obtiene:
+
+```{r Valores numéricos outliers, fig.cap="Valores outliers"}
+
+outGR <- boxplot.stats(welldata$GR)$out; outGR
+outILD <- boxplot.stats(welldata$ILD_log10)$out; outILD
+outDelta <- boxplot.stats(welldata$DeltaPHI)$out; outDelta
+outPHIND <- boxplot.stats(welldata$PHIND)$out; outPHIND
+outPE <- boxplot.stats(welldata$PE)$out; outPE
+```
+
+Se observa que las variables `GR`, `DeltaPHI` y `PHIND` se encuentran fuera del rango. Respecto a `ILD_log10` se obserban valores negativos fuera del rango y otros 17 valores positivos que se encuentran dentro del rango pero que son valores extremos. `PE` presenta 39 valores extremos que se encuentran dentro del rango. 
+
+Respecto al **tratamiento de los outliers**, se va a optar por eliminar los valores extremos ya que la geología es muy compleja e imputar los valores por su media o mediana no sería adecuado en este tipo de estudios puesto que los valores no representarían la realidad de los datos del subsuelo. Como se tiene un número de datos amplio, la eliminación de los autliers no afectará al estudio y permitirá obtener análisis que se ajusten mejor a la realidad sin que se vean afectados por los valores extremos. 
+
+
+```{r fig.cap="Diagrama de caja: outliers", fig.height=4, fig.width=8}
+# copia de los datos a WD
+WD <- welldata
+
+# Eliminación de valores outliers:
+# outGR:
+outGR_ind <- which(WD$GR %in% c(outGR))
+out_rows_GR <-  WD[outGR_ind, ]
+WD <- WD[!(WD$GR %in% outGR),]
+# outILD:
+outILD_ind <- which(WD$ILD_log10 %in% c(outILD))
+out_rows_ILD <-  WD[outILD_ind, ]
+WD <- WD[!(WD$ILD_log10 %in% outILD),]
+# outDelta:
+outDelta_ind <- which(WD$DeltaPHI %in% c(outDelta))
+out_rows_Delta <-  WD[outDelta_ind, ]
+WD <- WD[!(WD$DeltaPHI %in% outDelta),]
+# outPHIND:
+outPHIND_ind <- which(WD$PHIND %in% c(outPHIND))
+out_rows_PHIND <-  WD[outPHIND_ind, ]
+WD <- WD[!(WD$PHIND %in% outPHIND),]
+# outPE:
+outPE_ind <- which(WD$PE %in% c(outPE))
+out_rows_PE <-  WD[outPE_ind, ]
+WD <- WD[!(WD$PE %in% outPE),]
+nrow(WD)
+```
+
+
+
+```{r echo=FALSE}
+
+# Diagrama de cajas de las variables
+par(mfrow=c(2,3))
+
+boxplot( WD$GR, main="GR",
+         xlab = "GR", ylab = "Values",
+         col = "turquoise")
+boxplot( WD$ILD_log10, main="ILD_log10",
+         xlab = "ILD_log10", ylab = "Values",
+         col = "turquoise")
+boxplot( WD$DeltaPHI, main="DeltaPHI",
+         xlab = "DeltaPHI", ylab = "Values",
+         col = "turquoise")
+boxplot( WD$PHIND, main="PHIND",
+         xlab = "PHIND", ylab = "Values",
+         col = "turquoise")
+boxplot( WD$PE, main="PE",
+         xlab = "PE", ylab = "Values",
+         col = "turquoise")
+```
+
+
+```{r echo=FALSE}
+
+#GR
+outGR2 <- boxplot.stats(WD$GR)$out
+WD <- WD[!(WD$GR %in% outGR2),]
+#PHIND
+outPHIND2 <- boxplot.stats(WD$PHIND)$out
+WD <- WD[!(WD$PHIND %in% outPHIND2),]
+#Delta
+outDelta2 <- boxplot.stats(WD$DeltaPHI)$out
+WD <- WD[!(WD$DeltaPHI %in% outDelta2),]
+#PE
+outPE2 <- boxplot.stats(WD$PE)$out
+WD <- WD[!(WD$PE %in% outPE2),]
+nrow(WD)
+```
+
+```{r fig.cap="Diagrama de cajas", warning=FALSE}
+
+# Diagrama de cajas de las variables
+par(mfrow=c(1,7))
+
+boxplot( WD$GR, main="GR",
+         xlab = "GR", ylab = "Values",
+         col = "turquoise")
+boxplot( WD$ILD_log10, main="ILD_log10",
+         xlab = "ILD_log10", ylab = "Values",
+         col = "turquoise")
+boxplot( WD$DeltaPHI, main="DeltaPHI",
+         xlab = "DeltaPHI", ylab = "Values",
+         col = "turquoise")
+boxplot( WD$PHIND, main="PHIND",
+         xlab = "PHIND", ylab = "Values",
+         col = "turquoise")
+boxplot( WD$PE, main="PE",
+         xlab = "PE", ylab = "Values",
+         col = "turquoise")
+
+```
+
+Finalmente se observa que no quedan valores extremos en el conjunto de datos.
+
+```{r}
+dim(WD)
+```
+
+Se observa que el juego de datos tiene ahora 2785 registros. 
+
+
+## Exportación de los datos procesados:
+
+
+Una vez realizada la integración, validación y limpieza de los datos, guardamos los datos en un nuevo fichero csv con el nombre `welldata_clean.csv`como sigue:
+
+```{r Exportación datos limpios}
+# Exportación de los datos limpios en .csv
+
+write.csv(WD, "WD_clean.csv")
+```
+
+
+***
+\newpage
+
+# ANÁLISIS DE LOS DATOS:
+
+En esta fase del estudio se van a analizar las variables cualitativas y cuantitativas y se visualizarán los resultados para obtener un mayor conocimiento de los datos de estudio. 
+
+Se realizará un estudio de la correlación entre las variables
+
+Así mismo, se discretizará la variable `Depth`en diferentes intervalos de interés y aplicarán métodos de reducción de dimensionalidad para el estudio de las variables.
+
+## Grupos de datos
+
+A continuación, se divide el conjunto de datos en diferentes subgrupos que pueden ser interesante analizar a la hora de realizar la clasificación, conforme a su origen marino o no marino o el tipo de roca independientemente de su orígen.
+
+```{r}
+
+# Agrupación por tipo de sedimento:
+marino <- WD[WD$NM_M == "2",]
+no_marino <- WD[WD$NM_M == "1",]
+
+# Agrupación por tipo de facies:
+
+arenisca <- WD[WD$Labels == "SS",]
+limolita <- WD[WD$Labels == "CSiS" | WD$Labels == "FSiS" | WD$Labels == "SiSH",]
+caliza <- WD[WD$Labels == "MS" | WD$Labels == "WS" | WD$Labels == "PS",]
+dolomita <- WD[WD$Labels == "D",]
+carbonato <- WD[WD$Labels == "BS",]
+```
+
+Se va a crear una nueva variable `INT_DEPTH` que se añadirá al dataset original. Esta variable se va a discretizar en intervalos de amplitud en función de la profundidad de los pozos `shallow (S)`, `medium_shallow (MS)`, `medium (M)`, `medium_deep (MD)` y `deep (D)`.
+
+Nota: 1 foot = 0.3048 metros. El intervalo corresponde a aproximadamente 50 metros (164,042 feet) ya que los registros de pozo están en unidades américanas. Por conveniencia, se ha redondeado a 164 para tener intervalos numéricos exactos.
+
+
+```{r fig.cap="Intervalos de profundidad", fig.height=4, fig.width=8}
+
+summary(WD[,"Depth"])
+
+WD["INT_DEPTH"] <- cut(WD$Depth, breaks = c(2574,2738,2902,3066,3130), 
+                       labels = c("S", "MS", "M","D"), right = FALSE, 
+                       include.lowest = TRUE)
+
+
+# Se muestra variable de profundidad
+table(WD$INT_DEPTH)
+
+plot(WD$INT_DEPTH, main="Intervalos de profundidad", 
+     xlab="Intervalos", ylab="Cantidad",
+     col = c("plum3","aquamarine2", "aquamarine3","aquamarine4","plum3"))
+```
+ 
+Se observa como hay una mayor cantidad de datos en intervalos de profundidad media.
+
+Esto se deba a que los registros de pozo alcanzan diferentes profundidades como se muestra en la siguiente tabla: 
+
+```{r Tabla intervalos-profundidad}
+
+kable_classic(kable(table(WD[c("INT_DEPTH","Well_Name")])))
+```
+
+Se puede observar que la profundidad de las mediciones es variable. En el pozo `CHURCHMAN BIBLE` comienza a profundidades medias de 2902 pies, `CROSS H CATTLE` y `LUKE G U` comienzan a profundidades de 2574 pies y `NEWBY`, `NOLAN`, `RECRUIT F9`, `SHANKLE`Y `SHRIMPLIN` comienzan a profundidades de 2738 pies. 
+Únicamente las mediciones en los pozos `CHURCHMAN BIBLE` y `RECRUIT F9` alcanzan la profundidad máxima `deep (D)` de ahí a que la cantidad de datos en esta categoría es más baja.
+
+
+## Análisis estadístico de las variables. Comprobación de la normalización y homocedasticidad de los datos.
+
+**VARIABLES CUALITATIVAS: diagrama de frecuencias y comprobación de la homocedasticidad de los datos:**
+
+Se hace un primer análisis visual de las variables cualitativas y la influencia que tiene cada categoría a través de la representación gráfica de la frecuencia absoluta mediante diagramas de barras. 
+
+```{r Facies freq, echo=FALSE, fig.height=2, fig.width=4, warning=FALSE}
+
+# Tabla de frecuencias:
+Tabla <- WD %>% group_by(Facies) %>% summarise(Total=n()) %>%   
+    dplyr::mutate(Porcentaje = round(Total/sum(Total)*100, 1))
+
+# Gráfico de barras:
+b1 <- ggplot(Tabla, aes(x = Facies, y= Total, fill= Facies) ) +          
+  geom_bar(width = 0.9, stat="identity", position = position_dodge())+                    
+
+  ylim(c(0,800))+
+  labs(x="Facies", y= "Frecuencia \n (%)") +
+  labs(fill = "Facies")+                                          
+  geom_text(aes(label=paste0(Total," ", "","","(", Porcentaje, "%",")")),
+            vjust= -0.2, 
+            color="black", 
+            hjust=0.5,
+            position = position_dodge(0.9),  
+            angle=0, 
+            size=3.0
+            ) +  
+
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1)) +
+  theme_light(base_size = 14) +
+  #facet_grid(~"Variable Facies")
+  facet_wrap(~"Variable Facies") +
+  scale_fill_viridis_c(option = "mako")
+```
+
+
+```{r Formation freq, message=FALSE, echo=FALSE, fig.height=2, fig.width=4, warning=FALSE}
+
+# Tabla de frecuencias:
+Tabla <- WD %>% group_by(Formation) %>% summarise(Total=n()) %>%   
+    dplyr::mutate(Porcentaje = round(Total/sum(Total)*100, 1))
+
+# Gráfico de barras:
+b2 <- ggplot(Tabla, aes(x = Formation, y=Total, fill=Formation) ) +          
+  geom_bar(width = 0.9, stat="identity", 
+           fill = mako(14), position = position_dodge()) +  
+  ylim(c(0,550))+
+  labs(x="Formation", y= "Frecuencia \n (%)") +
+  labs(fill = "") +                                          
+  
+  geom_text(aes(label=paste0(Total," ", "","","(", Porcentaje, "%",")")),
+            vjust=--0.2, 
+            color="black", 
+            hjust=-0.1,
+            position = position_dodge(0.9),  
+            angle=0, 
+            size=3.0
+            ) +  
+  scale_fill_discrete(name = "Formation") +
+  
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1)) +
+  theme_light(base_size = 14) +
+  #facet_grid(~"Variable Formation")
+  facet_wrap(~"Variable Formation") +
+  coord_flip()
+  scale_fill_viridis_c(option = "C")
+  
+```
+
+
+
+```{r Well_Name freq, echo=FALSE, fig.height=2, fig.width=4, warning=FALSE}
+
+# Tabla de frecuencias:
+Tabla <- WD %>% group_by(Well_Name) %>% summarise(Total=n()) %>%   
+    dplyr::mutate(Porcentaje = round(Total/sum(Total)*100, 1))
+
+# Gráfico de barras:
+b3 <- ggplot(Tabla, aes(x = Well_Name, y=Total, fill=Well_Name) ) +          
+  geom_bar(width = 0.9, stat="identity", 
+           fill = mako(8), position = position_dodge())+                    
+  ylim(c(0,650))+
+  labs(x="Well_Name", y= "Frecuencia \n (%)") +
+  labs(fill = "Well_Name")+     
+  
+  geom_text(aes(label=paste0(Total," ", "","","(", Porcentaje, "%",")")),
+            vjust= 0.4, 
+            color="black", 
+            hjust=-0.2,
+            position = position_dodge(0.9),  
+            angle=0, 
+            size=3.0
+            ) +  
+  scale_fill_discrete(name = "Well_Name",
+                      labels= c("SHRIMPLIN", "SHANKLE", "RECRUIR_F9", 
+                                "NOLAN", "NEWBY", "LUKE", "CROSS_H",
+                                "CHURCHMAN")) +
+  
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1)) +
+  theme_light(base_size = 14) +
+  #facet_grid(~"Variable Well_Name")
+  facet_wrap(~"Variable Well_Name") +
+  coord_flip()
+```
+
+
+```{r NM_M, echo=FALSE, fig.height=2, fig.width=4, warning=FALSE}
+
+# Tabla de frecuencias:
+Tabla <- WD %>% group_by(NM_M) %>% summarise(Total=n()) %>%   
+    dplyr::mutate(Porcentaje = round(Total/sum(Total)*100, 1))
+
+#Gráfico de barras:
+b4 <- ggplot(Tabla, aes(x = NM_M, y=Total, fill=NM_M) ) +          
+  geom_bar(width = 0.9, stat="identity", position = position_dodge())+                    
+  
+  ylim(c(0,1700))+
+  labs(x="NM_M", y= "Frecuencia \n (Porcentajes)") +
+  labs(fill = "NM_M")+                                          
+  
+  geom_text(aes(label=paste0(Total," ", "","", "(", Porcentaje, "%",")")),
+            vjust=-0.9, 
+            color="black", 
+            hjust=0.5,
+            position = position_dodge(0.9),  
+            angle=0, 
+            size=4.0) +  
+
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1)) +
+  theme_light(base_size = 14) +
+  #facet_grid(~"Variable NM_M")
+  facet_wrap(~"Variable NM_M") +
+  scale_fill_viridis_c(option = "mako")
+  
+```
+
+
+```{r fig.height=8, fig.width=10, out.width="75%", fig.cap = "Frecuencia variables cualitativas", warning=FALSE}
+
+grid.arrange(b1,b2,b3,b4, nrow=2)
+```
+En el gráfico de la variable `Facies`, se puede observar el peso de las diferentes facies siendo las limolinas gruesas (CSiS) y finas (FSiS) no marinas (Nonmarine coarse siltstone y Nonmarine fine siltstone) las más abundantesen y las dolimitas (D) las que menos.
+
+En la variable `Formation`, se observa que las formaciones que se repiten un mayor número de veces son `C LM` y `A1 LM`, ambasunidades litoestatigráficas con un intervalo no marino, que junto a `B5 LM` son las que los interavalos marinos superan a los no marinos.
+
+De la variable `Well_Name` se puede observar que las mediones del pozo con una mayor frecuencia correspondiente a `CROSS H CATTLE` que representa el 15.5% de los pozos mientras que el que tiene una menor frecuencia es `Recruit F9` con un 2.1%. En general, el resto de pozos se presentan de una forma similar con frecuencias del orden de 12-15%. 
+
+Finalmente, en la variable `NM_M` se observa que el indicador marino y no marino es muy similar, siendo la frecuencia del no marino ligéramente superior. 
+
+***
+\newpage
+
+## Comprobación de la homocedasticidad de los datos mediante test de Fligner-Killeen:
+
+Respecto a la comprobación de la **homocedasticidad**, esta se da cuando las varianzas son iguales, es decir, hay homogeneidad de varianzas. Para su análisis, se empleará el **test de Fligner-Killeen**, no paramétrico. En R, se usa la función `kruskal.test()`.
+
+La hipótesis nula ($H_o$) asume igualdad de varianzas en los diferentes grupos de datos, por lo que p-valores inferiores al nivel de significancia ($\alpha = 5%$) indicarán **heterocedasticidad** (se rechaza la hipótesis nula).
+
+
+
+```{r warning=FALSE}
+if (!require('graphics')) install.packages('graphics'); library('graphics') #
+
+var_check1 <- fligner.test(formula = Facies ~  Formation, data=WD)
+var_check1
+var_check2 <- fligner.test(formula = Facies ~  Well_Name, data=WD)
+var_check2
+```
+
+A partir de los datos obtenidos, se observa que tanto la variable `Formation` como la variable `Well_Name` tienen un p-value menor que el valor de significancia $\alpha=5%$ por tanto se rechaza la hipotesis nula de igualdad de varianza. En principio la heterocedasticidad en nuestro estudio no influirá ya que llevaremos a cabo un análisis de clasificación a partir de las variables numéricas.
+
+***
+\newpage
+
+## VARIABLES CUANTITATIVAS: estadísticos descriptivos y análisis de la normalidad:
+
+Para el estudio de normalidad comenzamos mostrando una breve descripción de de los principales estadísticos descriptivos:
+
+```{r Estudio descriptivo variables cuantitativas, echo=FALSE}
+# Variables numéricas:
+var_num <- WD[,c(5:11,13)]
+
+# Estudio descriptivo de las variables cuantitativas
+mean.n <- as.vector(sapply( var_num,mean,na.rm=TRUE ) )
+std.n <- as.vector(sapply( var_num,sd, na.rm=TRUE))
+median.n <- as.vector(sapply( var_num,median, na.rm=TRUE))
+mean.trim.0.05 <- as.vector(sapply( var_num,mean, na.rm=TRUE, trim=0.05))
+mean.winsor.0.05 <- as.vector(sapply( var_num,winsor.mean, 
+                                      na.rm=TRUE,trim=0.05))
+IQR.n <- as.vector(sapply( var_num,IQR, na.rm=TRUE))
+mad.n <- as.vector(sapply( var_num,mad, na.rm=TRUE))
+
+# Tabla de medidas de tendencia central:
+kable_classic(kable(data.frame(variables= names(var_num),
+Media = mean.n,
+Mediana = median.n,
+Media.recort.0.05= mean.trim.0.05,
+Media.winsor.0.05= mean.winsor.0.05),
+digits=3, align='l', caption="Medidas de Tendencia Central"))
+
+# Tabla de medidas de dispersión:
+kable_classic(kable(data.frame(variables= names(var_num),
+Desv.Standard = std.n, 
+IQR = IQR.n, 
+MAD = mad.n),
+digits=3, align='l', caption="Medidas de Dispersión"))
+```
+
+De los resultados obtenidos se puede observar que las variables numéricas tienen una media diferente de 0 y una desviación standard diferente de 1, lo que indica que no siguen una distribución normal. Las variables que tienden más a la normalidad son `ILD_log10` y `REPLOS`.
+
+## Normalidad de los datos: histogramas y test de Lliliefors
+
+Para comprobar la normalidad de los datos se puede hacer a través de la representación gráfica de histogramas y gráficos QQ-normal. 
+
+Así mismo, para realizar un contraste de normalidad en R con muestras grandes como nuestro caso se puede usar el test de **Lliliefors (Kolmogorov-Smirnov)** cuya función es **lillie.test()**
+
+Para analizar si se puede aceptar o rechazar la hipótesis nula se debe tener en cuenta el valor que toma **p-value** que es la probabilidad de que un valor estadístico calculado sea posible dada una hipótesis nula (H0) cierta. El valor de p-value oscila entre 0 y 1. Valores altos de
+p-value no periten rechazar la hipótesis nula:
+
+-   $p-value \geq  0.1$ no se debe rechazar la hipótesis nula (datos normalizados) ($H_o$)
+-   $0.01 \leq  p-value < 0.1$ depende del valor $\alpha$
+-   $p-value \leq  0.01$ se puede rechazar la hipótesis nula ($H_o$)
+
+
+**Representación gráfica de las variables numéricas:**
+
+```{r echo=TRUE, fig.height=4, fig.width=4, warning=FALSE, fig.cap="Comprobación de la normalidad"}
+# Inspección visual de la normalidad
+
+# Histograma
+g1=ggplot(data=WD, aes(x = Depth)) + 
+  geom_histogram(aes(y = ..density..),
+    bins = 15, color = NA, fill = rev(mako(15))) +
+  geom_density(fill = "grey55", color = "grey80", alpha = 0.2) +
+  xlab("RELPOS (m)") +
+  theme_light() +
+  labs(x="Facies", y="Frecuencia") +
+  labs(title = "Histograma",
+       subtitle = "Distribución de la profundidad (Depth)", caption = "") +
+  stat_function(fun=dnorm, colour="red", lty=2, 
+                args=list(mean = mean(WD$Depth), sd = sd(WD$Depth)))
+
+# Gráfica Q-Q de probabilidad normal
+g2=ggplot(WD, aes(sample = Depth)) +
+  stat_qq(col = "purple4", fill = "aquamarine3", size=3, shape=21, alpha=0.2) +
+  geom_qq_line(col="red", lty=2) +
+  theme_light() +
+  labs(x="Theoretical", y="Sample") +
+  labs(title = "Normal QQ-Plot",  
+       subtitle = "Desviación muestra vs normal teórica", caption = "")
+
+grid.arrange(g1,g2,nrow=1)
+
+# Test Lilliefors
+lillie.test(WD$Depth)
+
+# Histograma
+g1=ggplot(data=WD, aes(x = GR)) + 
+  geom_histogram(aes(y = ..density..),
+    bins = 15, color = NA, fill = rev(mako(15))) +
+  geom_density(fill = "grey55", color = "grey80", alpha = 0.2) +
+  xlab("RELPOS (m)") +
+  theme_light() +
+  labs(x="Facies", y="Frecuencia") +
+  labs(title = "Histograma",   
+       subtitle = "Distribución del gamma ray (GR)", caption = "") +
+  stat_function(fun=dnorm, colour="red", lty=2, args=list(mean = mean(WD$GR), 
+                                                             sd = sd(WD$GR)))
+
+# Gráfica Q-Q de probabilidad normal
+g2=ggplot(WD, aes(sample = GR)) +
+  stat_qq(col = "purple4", fill = "aquamarine3", size=3, shape=21, alpha=0.2) +
+  geom_qq_line(col="red", lty=2) +
+  theme_light() +
+  labs(x="Theoretical", y="Sample") +
+  labs(title = "Normal QQ-Plot",   
+       subtitle = "Desviación muestra vs normal teórica", caption = "")
+
+grid.arrange(g1,g2,nrow=1)
+lillie.test(WD$GR)
+
+# Histograma
+g1=ggplot(data=WD, aes(x = ILD_log10)) + 
+  geom_histogram(aes(y = ..density..),
+    bins = 15, color = NA, fill = rev(mako(15))) +
+  geom_density(fill = "grey55", color = "grey80", alpha = 0.2) +
+  xlab("RELPOS (m)") +
+  theme_light() +
+  labs(x="Facies", y="Frecuencia") +
+  labs(title = "Histograma",   
+       subtitle = "Distribución del gamma ray (GR)", caption = "") +
+  stat_function(fun=dnorm, colour="red", lty=2, args=list(mean = mean(WD$GR), 
+                                                             sd = sd(WD$GR)))
+
+# Gráfica Q-Q de probabilidad normal
+g2=ggplot(WD, aes(sample = ILD_log10)) +
+  stat_qq(col = "purple4", fill = "aquamarine3", size=3, shape=21, alpha=0.2) +
+  geom_qq_line(col="red", lty=2) +
+  theme_light() +
+  labs(x="Theoretical", y="Sample") +
+  labs(title = "Normal QQ-Plot",   
+       subtitle = "Desviación muestra vs normal teórica", caption = "")
+
+grid.arrange(g1,g2,nrow=1)
+lillie.test(WD$ILD_log10)
+
+# Histograma
+g1=ggplot(data=WD, aes(x = DeltaPHI)) + 
+  geom_histogram(aes(y = ..density..),
+    bins = 15, color = NA, fill = rev(mako(15))) +
+  geom_density(fill = "grey55", color = "grey80", alpha = 0.2) +
+  xlab("RELPOS (m)") +
+  theme_light() +
+  labs(x="Facies", y="Frecuencia") +
+  labs(title = "Histograma",   
+       subtitle = "Distribución del gamma ray (ILD_log10)", caption = "") +
+  stat_function(fun=dnorm, colour="red", 
+                lty=2, args=list(mean = mean(WD$ILD_log10),
+                                 sd = sd(WD$ILD_log10)))
+
+# Gráfica Q-Q de probabilidad normal
+g2=ggplot(WD, aes(sample = DeltaPHI)) +
+  stat_qq(col = "purple4", fill = "aquamarine3", size=3, shape=21, alpha=0.2) +
+  geom_qq_line(col="red", lty=2) +
+  theme_light() +
+  labs(x="Theoretical", y="Sample") +
+  labs(title = "Normal QQ-Plot",   
+       subtitle = "Desviación muestra vs normal teórica", caption = "")
+
+grid.arrange(g1,g2,nrow=1)
+lillie.test(WD$DeltaPHI)
+
+
+# Histograma
+g1=ggplot(data=WD, aes(x = PHIND)) + 
+  geom_histogram(aes(y = ..density..),
+    bins = 15, color = NA, fill = rev(mako(15))) +
+  geom_density(fill = "grey55", color = "grey80", alpha = 0.2) +
+  xlab("RELPOS (m)") +
+  theme_light() +
+  labs(x="Facies", y="Frecuencia") +
+  labs(title = "Histograma",   
+       subtitle = "Distribución del gamma ray (PHIND)", caption = "") +
+  stat_function(fun=dnorm, colour="red", lty=2, args=list(mean = mean(WD$PHIND), 
+                                                             sd = sd(WD$PHIND)))
+
+# Gráfica Q-Q de probabilidad normal
+g2=ggplot(WD, aes(sample = PHIND)) +
+  stat_qq(col = "purple4", fill = "aquamarine3", size=3, shape=21, alpha=0.2) +
+  geom_qq_line(col="red", lty=2) +
+  theme_light() +
+  labs(x="Theoretical", y="Sample") +
+  labs(title = "Normal QQ-Plot",  
+       subtitle = "Desviación muestra vs normal teórica", caption = "")
+
+grid.arrange(g1,g2,nrow=1)
+lillie.test(WD$PHIND)
+
+# Histograma
+g1=ggplot(data=WD, aes(x = PE)) + 
+  geom_histogram(aes(y = ..density..),
+    bins = 15, color = NA, fill = rev(mako(15))) +
+  geom_density(fill = "grey55", color = "grey80", alpha = 0.2) +
+  xlab("RELPOS (m)") +
+  theme_light() +
+  labs(x="Facies", y="Frecuencia") +
+  labs(title = "Histograma",   
+       subtitle = "Distribución del gamma ray (PE)", caption = "") +
+  stat_function(fun=dnorm, colour="red", lty=2, args=list(mean = mean(WD$PE), 
+                                                             sd = sd(WD$PE)))
+
+# Gráfica Q-Q de probabilidad normal
+g2=ggplot(WD, aes(sample = PE)) +
+  stat_qq(col = "purple4", fill = "aquamarine3", size=3, shape=21, alpha=0.2) +
+  geom_qq_line(col="red", lty=2) +
+  theme_light() +
+  labs(x="Theoretical", y="Sample") +
+  labs(title = "Normal QQ-Plot",   
+       subtitle = "Desviación muestra vs normal teórica", caption = "")
+
+grid.arrange(g1,g2,nrow=1)
+lillie.test(WD$PE)
+
+# Histograma
+g1=ggplot(data=WD, aes(x = RELPOS)) + 
+  geom_histogram(aes(y = ..density..),
+    bins = 15, color = NA, fill = rev(mako(15))) +
+  geom_density(fill = "grey55", color = "grey80", alpha = 0.2) +
+  xlab("RELPOS (m)") +
+  theme_light() +
+  labs(x="Facies", y="Frecuencia") +
+  labs(title = "Histograma",   
+       subtitle = "Distribución del gamma ray (RELPOS)", caption = "") +
+  stat_function(fun=dnorm, colour="red", 
+                lty=2, args=list(mean = mean(WD$RELPOS), 
+                                 sd = sd(WD$RELPOS)))
+
+# Gráfica Q-Q de probabilidad normal
+g2=ggplot(WD, aes(sample = RELPOS)) +
+  stat_qq(col = "purple4", fill = "aquamarine3", size=3, shape=21, alpha=0.2) +
+  geom_qq_line(col="red", lty=2) +
+  theme_light() +
+  labs(x="Theoretical", y="Sample") +
+  labs(title = "Normal QQ-Plot",   
+       subtitle = "Desviación muestra vs normal teórica", caption = "")
+
+grid.arrange(g1,g2,nrow=1)
+lillie.test(WD$RELPOS)
+
+
+```
+
+A la vista de los resultados obtenidos, se puede observar como las variables IDL_log10 y PE sieguen una distribución muy próxima a la normal y el resto tienen una tendencia hacia la izquierda o derecha. Esto se comprueba a partir del valor $p-value$ obtenido inferior al 5% de significancia lo que indica que se rechaza la hipótesis nula y los datos no siguen una distribución normal. lo A través de los gráficos de la normal Q-Q se observan puntos que se alejan de la normal, lo que indican valores que se alejan de esta.
+
+***
+\newpage
+
+#### Normalización de datos:
+
+Como se ha visto anteriormente, las variables numéricas no siguen una distribución normal, por lo tanto es importante ajustar los datos para que se encuentren en la misma escala. Para ello se usa la función de R `scale()` también conocida como normalización z-score.
+
+```{r fig.cap="Datos escalados"}
+# Selección de las variables numéricas:
+var_num_WD <- WD[,c(5:11,13)]
+
+# Datos escalados:
+WD_scaled <- scale(var_num_WD, center = TRUE, scale = TRUE)
+head(WD_scaled, 10)
+```
+
+El nuevo conjunto de datos será entonces `WD_scaled` que utilizaremos a partir de ahora. 
+
+***
+\newpage
+
+# PRUEBAS ESTADÍSTICAS:
+
+## Estudio de la correlación de variables:
+
+### CORRELACIÓN DE VARIABLES CATEGÓRICAS - Test estadísticos de significancia- tabla de contingencia
+
+**Test de significancia de $\chi^2$**:
+
+Para comprobar si existe asociación entre la variable dependiente y cada una de las variables explicativas (categóricas), se aplicará el **test Chi-cuadrado ($\chi^2$) de Pearson**. Un resultado significativo nos dirá que existe asociación.
+
+$$\chi^2 < p-value<\alpha=0.05=> se\ rechaza \ H_o => hay \ significancia$$
+
+$$\chi^2 > p-value>\alpha=0.05=> se\ acepta \ H_o => no\ hay\ significancia$$
+Donde:
+- $H_o$: Las variables son independientes y no existe relación entre ambas variables.
+- $H_1$: Las variables son dependientes (tienen cierto grado de asociación entre sí).
+
+
+```{r warning=FALSE}
+chisq.test(table(WD$Facies, WD$Formation))
+chisq.test(table(WD$Facies, WD$Well_Name))
+```
+
+Se observa que las 2 variables categóricas `Formation` y `Well_Name` tienen un $p-value<\alpha=5% de significancia$ lo que indica que existe un cierto grado de dependencia con la variable independiente `Facies`. Para conocerlo, se utilizan las tablas de contingencia y los test estadísticos `Phi()`y `CramerV()`en donde:
+
+- $0.1 - 0.3$ = asociación baja
+- $0.3 - 0.5$ = asociación media
+- $>0.5$ = asociación alta
+
+```{r Tablas cruzadas o de contingencia}
+tabla_1 <- table(WD$Formation, WD$Labels)
+tabla_2 <- table(WD$Well_Name, WD$Labels)
+```
+
+```{r message=FALSE, warning=FALSE}
+if(!require(DescTools)){
+    install.packages('DescTools', repos='http://cran.us.r-project.org')
+    library(DescTools)}
+```
+
+***
+\newpage
+
+```{r}
+
+# Table 1 Formation:
+prop.table(tabla_1, margin = 1)
+Phi(tabla_1)
+CramerV(tabla_1)
+```
+
+
+```{r}
+
+# Table 2 Well_Name:
+prop.table(tabla_2, margin = 1)
+Phi(tabla_2)
+CramerV(tabla_2)
+```
+
+De los resultados obtenidos se observa que la correlación de las variables es media para la variable `Well_Name`y alta para `Formation`, lo cual tiene sentido ya que las formaciones geológicas estratigráficas y las Facies están relacionadas entre sí.
+
+Se muestra esta relación de forma visual como se muestra a continuación:
+
+```{r warning=FALSE, fig.height=4, fig.width=8,}
+if (!require('ggstatsplot')) install.packages('ggstatsplot'); 
+library('ggstatsplot')
+
+# Plots
+ggbarstats(data = WD, x = Labels, y = Formation) + labs(caption = NULL)
+ggbarstats(data = WD, x = Labels, y = Well_Name) + labs(caption = NULL)
+
+```
+A partir de los gráficos obtenidos, se puede ver el peso de cada categoría con respecto a la variable `Facies`  así como su valor p-value. Se observa que todas las categorías tienen un p-value inferior al 5%, lo que indicaría que no se puede aceptar la hipótesis nula por lo tanto existe dependencia con la variable target. 
+
+\newpage
+
+### CORRELACIÓN DE VARIABLES NUMÉRICAS:
+
+Para estudiar la correlación lineal entre las variables numéricas se utiliza la función de R `cor_matrix` que nos permite calcular el coeficiente de correlación de Pearson, Kendall o Spearman para variables cuantitativas. 
+Por defecto R usa el método de Karl Pearson que mide la correlación lineal entre dos variables
+asumiendo que existe una cierta correlación lineal. 
+
+El coeficiente de correlación muestral **r** mide el **grado de correlación entre variables** y se caracteriza por $-1 \leq  r \leq  1$, donde 1 indica una asociación lineal inversa o directa exacta en función de si el signo es negativo o positivo respectívamente, próximo si el valor difiere de 1 y 0 indica que no existe asociación entre las variables.
+
+```{r fig.height=4, fig.width=8}
+
+cor_matrix = round(cor(var_num_WD, use="pairwise.complete.obs"),2)
+kable_classic(kable(cor_matrix))
+
+# Representación gráfica de la matríz de correlación
+corrplot(cor_matrix,method="color",tl.col="black", tl.srt=30, order = "AOE",
+number.cex=0.75,sig.level = 0.01, addCoef.col = "black")
+```
+
+Se observa que existe una correlación relativamente baja entre las variables numéricas y a medida que aumenta la profundidad de las mediciones en el pozo, aumenta la resisitividad `ILD_log10` y el efecto fotoeléctrico `PE`mientras que disminuye la transfomada `DeltaPHI`, gamma ray `GR`y la porosidad media de densidad de neutrones `PHIND`. Esto tiene sentido puesto que a medida que aumenta la profundidad, aumenta la presión y disminuye la porosidad en las rocas.
+
+
+```{r}
+
+# Nombre de las columnas:
+names<-colnames(WD)
+
+# Variables cuantitativas
+idQuantitative <- which(names=="GR" | names=="ILD_log10" | names=="DeltaPHI" | names=="PHIND" | names=="PE")
+
+ggpairs(WD, columns = idQuantitative, aes(color = Labels,alpha = 0.5),
+        upper = list(continuous = "points", size =0.1)) 
+
+```
+
+***
+\newpage
+
+## Modelo no supervisado: método K-means para clustering:
+
+El algoritmo K-means es un método no supervisado y uno de los más empleados para el agrupamiento (clustering) de datos.
+Este método consiste en realizar agrupamientos mediante el mínimo de las distancias cuadráticas entre cada objeto y el centroide del cluster, de modo que se puedan diferenciar grupos o patrones dentro de los datos. Para ello es necesario definir el número de clusters (k) o n-esferas que se van a emplear, en donde cada punto es asignado al centroide más cercano y, posteriormente,se actualiza la posicion del centroide de cada cluster, tomando la posición promedio del grupo. El método lo que hace es iterar hasta el criterio de parada, es decir, hasta que los centroides dejan de cambiar, los objetos dejan de cambiar de cluster o cuando se establece un límite de iteración. 
+
+Dado que es necesario especificar previamente el número ótimo de clusters (k), existen diferentes métodos para calcularlo.
+
+```{r message=FALSE, warning=FALSE}
+
+# Library:
+if (!require('cluster')) install.packages('cluster'); library(cluster)
+
+# Distancia entre observaciones
+d <- daisy(WD_scaled) 
+
+# Vectores
+silhouette    <- rep(0, 10)
+tot.withinss  <- rep(0, 10)
+withinss      <- rep(0, 10)
+betweenss     <- rep(0, 10)
+
+# Iteración para cada número de grupos
+for (i in c(2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20))
+{
+  # Semilla
+  set.seed(123)
+  
+  # Algoritmo kmeans
+  k_means           <- kmeans(WD_scaled, i)
+  y_cluster         <- k_means$cluster
+  
+  #Coeficiente silhouette para cada objeto:
+  sk                <- silhouette(y_cluster, d)
+  
+  # Promedio de la silueta para cada objeto:
+  silhouette[i]     <- mean(sk[, 3])
+  
+  # WSS y BSS
+  tot.withinss[i]   <- k_means$tot.withinss # o k_means$betweenss/k_means$totts
+  withinss[i]       <- k_means$withinss
+  betweenss[i]      <- k_means$betweenss
+}
+
+clusters <- 1:20
+data <- as.data.frame(cbind(clusters, silhouette, tot.withinss, withinss, 
+                            betweenss))
+```
+
+
+```{r}
+# Resultados
+str(k_means)
+```
+
+```{r fig.cap="Total Sum of Squared Within - WWSS", warning=FALSE, fig.height=4, fig.width=8}
+ggplot(data=data[-1, ], aes(x=data$clusters[-1], y=data$tot.withinss[-1], 
+                            group=1), shapes=18) +
+  geom_line(color = 'turquoise') +
+  geom_point(shape=0, size=3, color = 'turquoise') +
+  ggtitle('Elbow Method - Sum of Squared Within (tot.withinss)') + 
+  xlab('Number of clusters (k)') + 
+  ylab('Total Sum of Squared Within (WSS)')+
+  theme_bw()
+```
+
+\newpage
+
+#### Average Silhouette Method
+
+La silueta promedio mide la calidad del agrupamiento (clústering) determinando qué tan bien se encuentra un objeto dentro del grupo. Para ello calcula el **coeficiente promedio de silueta** que permite conocer si la asignación de cada objeto se ha hecho al grupo correcto. En donde:
+
+- $> 0$: valores positivos proximos a 1 indican alta similitud intraclase, es decir los objetos estan bien agrupados.
+
+- $< 0$: valores negativos indican que los objetos están en grupos incorrectos.
+
+- $= 0$: indica que las observaciónes están entre 2 grupos (conglomerados).
+
+ 
+Por tanto, en número óptimo de clusters será el k para el que se obtenga un mayor valor promedio sobre el resto de valores posibles para k. 
+
+```{r}
+silhouette[2:20]
+```
+
+De los valores numéricos obtenidos de la silueta y del gráfico anterior, se observa que el coeficiente promedio muestra que todos los clusters representan un % de la varianza de los datos muy similar, siendo k=2 del 26,39% y k=3 del 20,20% ligéramente mayor al resto. También se observa un aumento para k=5 del 18,25% y posteriormente un descenso que indica que la curva comienza a aplanarse.
+
+En geología es normal que las litologías tiendan a intercalarse entre sí, por lo que más grupos pueden ayudar a relevar estos patrones. 
+
+[Fuente:] (https://towardsdatascience.com/facies-classification-using-unsupervised-machine-learning-in-geoscience-8b33f882a4bf)
+
+R también dispone de la función `fviz_nbclust` de la librería factoextra para representarlo gráficamente, utilizando el método 'Euclidian' que considera la distancia menor entre puntos.
+
+```{r Elbow method 2, warning=FALSE, fig.cap="Elbow Method", warning=FALSE, fig.height=4, fig.width=8}
+if (!require('factoextra')) install.packages('factoextra'); library(factoextra)
+
+# Elbow method
+fviz_nbclust(x = WD_scaled, FUNcluster = kmeans, method = "wss", 
+             k.max = 30, diss = get_dist(WD_scaled, method = "euclidean"), 
+             nstart = 25, linecolor = 'turquoise') +
+  geom_vline(xintercept = 2, linetype = 2, linecolor = 'turquoise') + 
+  labs(subtitle = "Elbow method") 
+```
+
+Se observa que no hay una variación significativa en la curva a excepción de k=2, la curva desciende progresivamente. Aunque no se aprecia mucho, la curva comienza a aplanarse a partir de k=5. A priori se deberá probar con varios valores de k para evaluar con cual obtendríamos mejores resultados y cómo se relacionan entre sí.
+
+```{r fig.cap="Gap Statistic Method", warning=FALSE, fig.height=4, fig.height=8}
+# Gap statistic
+set.seed(123)
+fviz_nbclust(x = WD_scaled, FUNcluster = kmeans, method = "gap_stat",  
+             linecolor = 'turquoise', nboot = 50) # 500 recomendable +
+```
+
+En este caso, se observa que el valor óptimo corresponde a k=10. En cualquier caso se observa que la elección del cluster óptmimo no es tan intuitivo con los datos disponibles y en nunguno de los casos se evidencia claramente que el número de facies es 9, por lo que se probarán diferentes valores de k para el estudio de clasificación.
+
+\newpage
+
+#### Clustering k=2
+
+```{r fig.cap="K=2", warning=FALSE, fig.height=4, fig.width=8}
+set.seed(123)
+
+# k-means k=3
+k2 <- kmeans(x = WD_scaled, centers = 2, nstart = 25)
+
+# Coeficiente de silueta media
+sil_k2 <- silhouette(k2$cluster, dist(WD_scaled))
+
+fviz_silhouette(sil_k2, palette = c('yellow3','purple'), ggtheme = theme_bw())
+```
+```{r}
+# Items por cluster:
+table(k2$cluster)
+```
+
+
+```{r fig.height=4, fig.width=8}
+# Clasificación real:
+table(WD$NM_M)
+
+# Agrupamientos:
+num_marino <- count(marino)
+num_no_marino <- count(no_marino)
+
+amb <- data.frame('Marino'=num_marino, 'No_marino'=num_no_marino)
+names(amb)[1] <- "Marino"
+names(amb)[2] <- "No_marino"
+amb
+```
+
+
+```{r fig.cap="K=2", warning=FALSE, fig.height=4, fig.width=8}
+#Visualización:
+g2 <- fviz_cluster(k2, data = WD_scaled, ellipse.type = "convex", palette = c('yellow3','purple'), ggtheme = theme_bw()); g2
+```
+
+De los resultados obtenidos se observa que se han formado 2 grupos bien diferenciados que podrían asociarse a los datos marinos y no marinos:
+
+ - Grupo 1: Marinos (M) (color amarillo)  
+ - Grupo 2: No marinos (NM) (color morado)  
+ 
+El coeficiente promedio de silueta muestra que las agrupaciones se han formado correctamente (valores positivos) y existe cohesión entre los grupos en comparación con la distancia a otros grupos (separación).  aunque esta es baja ya que  pero estos son valores póximos a 0 por lo que indica ya que los coeficiente son relativamente bajos del orden de 25%. 
+
+
+Otra forma de visualizar los 3 clusters es con la función `cluspot`:
+
+```{r Clustering k2, fig.cap="K=2", fig.height=4, fig.width=8}
+clusplot(WD_scaled, k2$cluster, color=TRUE, shade=TRUE, labels=2, lines=0)
+```
+
+Se puede ver que la clasificación no es muy precisa por la intercalación de sedimentos. 
+
+\newpage 
+
+#### Clustering k=5
+
+```{r fig.cap="K=5", warning=FALSE, fig.height=4, fig.width=8}
+set.seed(123)
+
+# k-means k=3
+k5 <- kmeans(x = WD_scaled, centers = 5, nstart = 25)
+
+# Coeficiente de silueta media
+sil_k5 <- silhouette(k5$cluster, dist(WD_scaled))
+
+fviz_silhouette(sil_k5, palette = c('yellow3','purple', 'turquoise4',
+                                    'orange', 'pink'), ggtheme = theme_bw())
+```
+
+
+```{r fig.cap="K=5"}
+# Items por cluster:
+table(k5$cluster)
+```
+
+
+```{r fig.cap="Datos reales variable Facies"}
+# Clasificación real:
+table(WD$Labels)
+```
+
+
+```{r fig.cap="K=5", warning=FALSE, fig.height=4, fig.width=8}
+#Visualización:
+g5 <- fviz_cluster(k5, data = WD_scaled, ellipse.type = "convex", palette = c('yellow3','purple', 'turquoise4', 'orange', 'pink'), ggtheme = theme_bw()); g5
+```
+
+De los resultados obtenidos se observa que se han formado 5 grupos bien diferenciados que podrían asociarse al tipo de roca (limolita, caliza, dolomita, carbonato, arenisca) y su ambiente de deposición. Aún así no se dispone de datos suficienes para determinarse con exactitud qué grupo corresponde cada uno, se podría hacer una primera aproximación basada en la frecuencia y en los conocimientos de la zona:
+
+```{r fig.height=4, fig.width=8}
+# Agrupamientos:
+num_arenisca <- count(arenisca)
+num_carbonato <- count(carbonato)
+num_limolita <- count(limolita)
+num_dolomita <- count(dolomita)
+num_caliza <- count(caliza)
+
+litología <- data.frame('Arenisca'=num_arenisca, 'Carbonato'=num_carbonato, 'Limolita'=num_limolita, 'Dolomita'=num_dolomita, 'Caliza'=num_caliza)
+names(litología)[1] <- "Arenisca"
+names(litología)[2] <- "Carbonato"
+names(litología)[3] <- "Limolita"
+names(litología)[4] <- "Dolomita"
+names(litología)[5] <- "Caliza"
+litología
+```
+
+ - Grupo 1: Sedimentos marinos: limolitas marinas (color amarillo)  
+ - Grupo 2: Sedimentos no marinos: areniscas, lutitas, limolitas  (color morado)
+ - Grupo 3: Sedimentos marinos carbonatados de ambiente lagoon: carbonatos, calizas, dolomitas (color turquesa)  
+ - Grupo 4: Sedimentos no marinos carbonatados de ambiente lagoon: carbonatos, calizas, dolomitas (color naranja)  
+ - Grupo 5: Sedimentos no marinos  carbonatados de ambiente lagoon: carbonatos, calizas, dolomitas (color rosa)  
+ 
+El coeficiente promedio de silueta muestra que las agrupaciones se han formado correctamente, ya que el coeficiente es bajo del orden del 18%. 
+
+\newpage
+
+#### Clustering k=7
+
+```{r fig.cap="K=7", warning=FALSE, fig.height=4, fig.width=8}
+set.seed(123)
+
+# k-means k=3
+k7 <- kmeans(x = WD_scaled, centers = 7, nstart = 25)
+
+# Coeficiente de silueta media
+sil_k7 <- silhouette(k7$cluster, dist(WD_scaled))
+
+fviz_silhouette(sil_k7, 
+                palette = c('yellow3','purple', 'turquoise4', 'orange', 'pink',
+                            'aquamarine', 'red'), 
+                ggtheme = theme_bw())
+```
+
+
+```{r fig.cap="K=7"}
+# Items por cluster:
+table(k7$cluster)
+```
+
+
+```{r fig.cap="Datos reales variable Formation"}
+# Clasificación real:
+table(WD$Formation)
+```
+
+
+```{r fig.cap="K=7", warning=FALSE, fig.height=4, fig.width=8}
+#Visualización:
+g7 <- fviz_cluster(k7, data = WD_scaled, ellipse.type = "convex", palette = c('yellow3','purple', 'turquoise4', 'orange', 'pink', 'aquamarine', 'red'), ggtheme = theme_bw()); g7
+```
+
+De los resultados obtenidos se observa que se han formado 7 grupos bien diferenciados que podrían asociarse a las 7 unidades estratigráficas (Formations) tanto marinas como no marinas.
+
+Los frupos 2 y 3 corresponden a formaciones marinas y el grupo 1 a formación no marina. El resto de grupos corresponden a formaciones con intercalaciones entre ambiente marino y no marino.
+
+El coeficiente promedio de silueta muestra que las agrupaciones se han formado correctamente aunque los grupos 2, 3 5 y 7 muestra que algunos conglomerados se han agrupado en conglomerados diferentes. Esto se debe a la intercalación de litologías, pincipalmente en el límite marino y no marino por la variación de la lámina de agua. Es probable que al aumentar el número de clusters, también se diferencia más grupos por tamaña de grano. 
+
+Conocimiendo que se disponen de 9 facies diferentes, a continuación probaremos con k=9 para ver las agrupaciones que se obtienen.
+
+\newpage
+
+#### Clustering k=9
+
+```{r fig.cap="K=9", warning=FALSE, fig.height=4, fig.width=8}
+set.seed(123)
+
+# k-means k=3
+k9 <- kmeans(x = WD_scaled, centers = 9, nstart = 25)
+
+# Coeficiente de silueta media
+sil_k9 <- silhouette(k9$cluster, dist(WD_scaled))
+
+fviz_silhouette(sil_k9, palette = c('yellow3','purple', 'turquoise4', 'orange', 'pink', 'aquamarine', 'red', 'brown', 'cyan'), ggtheme = theme_bw())
+```
+
+
+```{r fig.cap="K=9"}
+# Items por cluster:
+table(k9$cluster)
+```
+
+```{r fig.cap="Datos reales variable Facies"}
+# Clasificación real:
+table(WD$Facies)
+```
+
+
+```{r fig.cap="K=9", warning=FALSE, fig.height=4, fig.width=8}
+#Visualización:
+g9 <- fviz_cluster(k9, data = WD_scaled, ellipse.type = "convex", palette = c('yellow3','purple', 'turquoise4', 'orange', 'pink', 'aquamarine', 'red', 'brown', 'cyan'), ggtheme = theme_bw()); g9
+```
+
+De los resultados obtenidos se observa que se han formado 9 grupos bien diferenciados que se superponen unos con otros lo cual revela la complejidad de la geología. El coeficiente promedio de silueta es del orden del 18%. Existe la presencia de varios grupos en que sus límites de agrupamiento no están del todo definidos que se asocia con la intercalación de sedimentos y la variedad del tamaño de grano, diferenciándose 3 subgrupos (tamaño fino, medio y grueso). A partir de los datos conocidos y la información existente, se puede hacer una primera diferenciación de grupos para k=9 como sigue:
+
+- Grupos 2, 5, 6 y 9 corresponden a sedimentos marinos con intercalación de sedimentos de diferentes tamaños de grano.
+
+- Grupos 1, 3, 4, 7 y 8 corresponden a sedimentos no marinos con intercalación de sedimentos de diferentes tamaños de grano.
+
+Habrá que estudiar más en detalle los valores de los registros de pozo y cómo se correlacionan entre sí para poder clasificar las facies de una forma más precisa.
+
+La función de R `clustree()` permite visualizar las agrupaciones de cluster mediante un árbo en donde el tamaño de cada nodo indica la cantidad de muestras que hay en cada grupo y la transparencia ‘in_prop’ de la flecha al nodo que entra indica la proporción al nodo entrante.
+
+```{r warning=FALSE, fig.cap="Agrupaciones de cluster mediante árbol de decisión"}
+
+if (!require('clustree')) install.packages('clustree'); library(clustree)
+
+tmp <- NULL
+for (k in 1:10){
+  tmp[k] <- kmeans(WD_scaled, k, nstart = 25)
+}
+df <- data.frame(tmp)
+# add a prefix to the column names
+colnames(df) <- seq(1:10)
+colnames(df) <- paste0("k",colnames(df))
+# get individual PCA
+df.pca <- prcomp(df, center = TRUE, scale. = FALSE)
+ind.coord <- df.pca$x
+ind.coord <- ind.coord[,1:2]
+df <- bind_cols(as.data.frame(df), as.data.frame(ind.coord))
+clustree(df, prefix = "k")
+```
+Se observa que a partir de k=5 y k=6 la clasificación comienza a tener elementos en común y la clasificación es menos clara. Esto se debe principalmente a las propiedades de las rocas y la intercalación de las mismas. 
+
+***
+\newpage
+
+## Modelo supervisado o de clasificación: 
+
+Lo primero que se debe hacer es dividir el dataset en dos conjuntos de datos de entrenamiento (train) y prueba (test), dejando fuera la variable independiente (target) que se usará posteriormente para validar el modelo. Con el conjunto de entrenamiento se creará el modelo predictivo y con el conjunto de test se evaluará su precisión. La selección de las filas de los conjuntos se hará de forma aleatoria con la función de R `sample()`. 
+
+Aplicamos la regla de los dos tercios para entrenar el conjunto de datos originales (train set) y validarlo con el tercio restante (test set).
+
+
+```{r}
+set.seed(123)
+
+# Se mueven de forma arbitrária los datos:
+WD_random <- WD[sample(nrow(WD)),]
+
+# Sacamos uno de los pozos del dataset:
+well_blind <- WD_random[WD_random$Well_Name == "SHANKLE", ] 
+
+# Se borra el pozo del conjunto de datos:
+WD2 <- WD[WD$Well_Name!= "SHANKLE",]
+
+# Variables categóricas as factor
+WD2$Labels<-as.factor(WD2$Labels)
+WD2$Formation<-as.factor(WD2$Formation)
+WD2$Well_Name<-as.factor(WD2$Well_Name)
+WD2$Origin<-as.factor(WD2$Origin)
+str(WD2$Labels)
+str(WD2$Formation)
+str(WD2$Well_Name)
+str(WD2$Origin)
+```
+
+
+```{r}
+# División target y resto de variables
+set.seed(123)
+y <- WD2[,2] 
+X <- WD2[,3:4,12] 
+```
+
+
+```{r}
+set.seed(123)
+
+# División del conjunto de datos en train-test:
+split_prop <- 3
+
+indexes = sample(1:nrow(WD2), size=floor(((split_prop-1)/split_prop)*nrow(WD2)))
+X_train <- X[indexes,]
+X_test <- X[-indexes,]
+y_train <- y[indexes]
+y_test <- y[-indexes]
+```
+
+
+\newpage
+
+### MODELING: decision tree classifier.
+
+Se crea el árbol de decisión usando los datos de entrenamiento como sigue. Para ello se va a utilizar el paquete de R `C50`.
+
+```{r warning=FALSE}
+# Instalación del paquete C50
+if (!require(C50)) {install.packages("C50", repos = "http://cran.es.r-project.org"); require(C50)}
+```
+
+```{r fig.cap="Modelo de clasificación de Facies"}
+set.seed(123)
+model <- C50::C5.0(X_train, y_train, rules=TRUE)
+summary(model)
+```
+
+Del resultado obtenido se puede observar como se ha obtenido un error del 38,4% que es bastante alto y las variables con más peso son 2: Formation con un 100% y Well_Name con un 43.60%%. La variable que más peso tiene en la clasificación de facies son las formaciones geológicas y estas están presentes en diferentes medidas a lo largo de los pozos como se muestra gráficamente a continuación:
+
+```{r fig.height=4, fig.width=10, fig.cap="Modelo de clasificación de Facies"}
+model <- C50::C5.0(X_train, y_train, trials=50)
+plot(model)
+```
+A partir del gráfico se puede observar las 7 unidades estratigráficas C (Neva), B5 (Cottonwood), B4 (Morrill), B3 (Eiss), B2 (Middleburg), B1 (Crouse) y A1 (Funston) y su diferenciación marina (LM) agrupado hacia la izquierda entre Formation 1 y 2 y los no marinos (SH) agrupados hacia la derecha entre Formation 1 y 21. 
+
+\newpage
+
+### Validación del modelo
+
+A continuación se ajustará el modelo al conjunto X_test que no ha sido visto anteiormente por el conjunto de entrenamiento vara evaluar la precisión de la clasificación de los datos. Como estamos empleando álboles de decisión para clasificación, se utiliza el parámetro type=class.
+
+```{r fig.cap="Predicción del modelo"}
+set.seed(123)
+predicted_model <- predict(model, X_test, type="class" )
+#table(y_test, Predicted=predicted_model)
+print(sprintf("La precisión del árbol es: %.2f %%", 100*sum(predicted_model == y_test) / length(predicted_model)))
+```
+
+Se observa que se obtiene una tasa de precisión del modelo del 59,06%, que en realidad no es un valor muy alto. Lo ideal sería que la tasa de predicción estuviera por encima del 90% aunque esto siempre varía en función de los datos.
+
+### Bondad del ajuste: matriz de confusión
+
+Para ver qué tan bien clasifica el modeloo los datos en las diferentes Facies, se emplea la matriz de confusión para ver la relación de los datos que han sido correctamente o erróneamente clasificados. Para ello se va a usar la libreria gmodelspara las tablas de contingencia.
+
+```{r warning=FALSE}
+if (!require(gmodels)) {install.packages("gmodels", repos = "http://cran.es.r-project.org"); require(gmodels)}
+```
+
+\newpage
+
+```{r fig.height=4, fig.width=8, fig.cap="Matrix de confusión"}
+# Tabla de contingencia modelo
+CrossTable(y_test, predicted_model,
+           prop.chisq = FALSE, prop.c = FALSE, prop.r = FALSE,
+           dnn = c('', ''))
+```
+
+Analizando los resultados obtenidos:
+
+BS: TP=34, FP=40-34=6, FN=57-34=23
+CSiS: TP=161, FP=187-161=26, FN=254-161=93
+D: TP=4, FP=20-4=16, FN=10-4=6
+FSiS: TP=40, FP=120-40=80, FN=54-40=6
+MS: TP=34, FP=66-34=32, FN=80-34=46
+PS: TP=90, FP=152-90=62, FN=148-90=58
+SiSH: TP=23, FP=45-23=22, FN=49-23=26
+SS: TP=35, FP=52-35=17, FN=52-35=17
+WS: TP=64, FP=124-64=60, FN=102-64=38
+
+\newpage
+
+### Validación del modelo:
+
+Ahora probamos el modelo entrenado en el conjunto de datos `well_blind`correspondiente al pozo SHANKLE, para no ha sido visto para analizar los resultados:
+
+
+```{r}
+validated_model <- predict(model, type = 'class', newdata = well_blind)
+summary(validated_model)
+```
+
+\newpage
+### Bondad del ajuste: matriz de confusión
+
+```{r fig.height=4, fig.width=8, fig.cap="Matrix de confusión"}
+# Tabla de contingencia modelo
+
+CrossTable(well_blind$Labels, validated_model,
+           prop.chisq = FALSE, prop.c = FALSE, prop.r = FALSE,
+           dnn = c('', ''))
+```
+
+
+De los datos obtenidos se observa que el modelo ha clasificado correctamente 81 datos de CSiS (22%), 14 de MS(3,8%) y 24 de PS (6,5%), no ha clasificado ningún dato como falso positivos (FP), sin embargo se observan los siguientes falsos negativos (FN) tenemos: CSiS(FN=233-81=152), MS(FN=63-14=49) y PS(FN=73-24=49). Es decir, 250 observaciones de 369 se han clasificado como otro tipo de facies. De los resultados obtenidos se concluye que se debe reducir la tasa de error de FN (error Tipo II) para poder clasificar las facies correctamente. Para futuros estudios, se deberá tener en cuenta el uso de hiperparámetros (advance boosting) para mejorar el modelo. 
+
+***
+\newpage
+
+# CONCLUSIONES:
+
+
+Conforme a la limpieza y análisis realizados, se concluye:
+
+- El conjunto de datos para el estudio no tienen **valores vacios o no disponibles**. Respecto a los **valores extremos o outliers** existentes, se han eliminado debido a la complejidad de la geología que impide imputar valores que se ajusten a los valores reales del subsuelo.
+
+- A partir del **test de Fligner-Killeen** de **homocedasticidad** y los valores de $p-value$ inferiores al valor de significancia $\alpha=5%$ se conclye que las variables cualitativas tienen varianza variable entre sus categorías y se rechaza la $H_o$. Esto se ajusta con las propiedades variables esperadas del subsuelo y la complejidad de la geología.
+
+- Del estudio de la **normalidad** mediante **estadísticos descriptivos, histogramas y test de Lliliefors** y los valores $p-value$ obtenidos inferirores al valor de significancia $\alpha=5%$, se concluye que las variables numéricas no siguen una distribución normal por lo que se rechaza la $H_o$ de normalidad.
+
+- La **correlación de las variables cualitativas** es media-alta para la variable `Well_Name` y alta para la variable `Formation`. Esto se comprueba posteriormente en el modelo de clasificación y el % de importancia que toman estas variables para la predicción de las facies.
+
+- La **correlación de las variables numéricas** es relativamente baja entre sí y a medida que aumenta la profundidad del pozo, aumenta la resisitividad `ILD_log10` y el efecto fotoeléctrico `PE` mientras que disminuye la transfomada `DeltaPHI`, gamma ray `GR` y la porosidad media de densidad de neutrones  `PHIND`, lo que se corresponde con lo esperado, ya que a mayor profundidad, aumenta la presión y disminuye la porosidad en las rocas.
+
+- A partir del **modelo no supervisado de clustering K-Means** se ha visto que la selección del número óptimos de clusters (k) no es muy intuitivo debido a la complejidad de la geología y que estos están estrechamente influenciados por el tipo de sedimentos (marino o no marino), la intercalación de sedimentos en los diferentes estratos, el tamaño de grano y las unidades estratigráficas. Se deben llevar a cabo más estudios para poder asociar las facies a grupos específicos.
+
+- Para el **modelo supervisado de clasificación y predicción de facies**, se ha dividido el conjunto de datos en un subconjuntos de entrenamiento-test y pozo ciego. El entrenamiento del modelo revela un 38,4% de error, lo que indica que el modelo no es muy bueno. La variable con más peso en el modelo es `Formation` con un 100% y `Well_Name` con un 43.60%. La validación del modelo se mantiene en esta línea con una predicción del árbol de decisión del 59.06%, lo cual es un tanto pobre. Al validar los datos con el pozo SHANKLE, datos que no han sido "vistos" durante el trenamiento-test, se concluye que el modelo clasifica correctamente 81 datos de CSiS (22%), 14 de MS(3,8%) y 24 de PS (6,5%). No hay presencia de FP (falsos positivos) pero el número de FN (falsos negativos o errores de Tipo II) es considerable lo que indica que el modelo clasifica los datos en las facies incorrectas y debe ser mejorado. 
+
+- Finalmente, se concluye que el análisis llevado a cabo ha permitido clasificar y predecir las facies objeto de estudio y que a la vista de los resultados obtenidos, se recomienda el uso de hiperparámetros (advance boosting) para futuros estudios y el uso de técnicas adicionales para contrastar los resultados y mejorar los modelos de clasificación y predicción de las facies. 
+***
+\newpage
+
+
+# Bibliografía
+
+
+Conocimientos previos
+ 
+Fuente consultada:
+
+- https://github.com/mardani72/Facies-Classification-Machine-Learning/blob/master/Facies_Classification_Various_ML_Final.ipynb
+- http://www.people.ku.edu/~gbohling/EECS833/
+- Case study: https://www.kgs.ku.edu/PRS/publication/2003/ofr2003-50.pdf
+- poster: https://www.kgs.ku.edu/PRS/publication/2003/ofr2003-30/index.html
+- Facies: https://www.kgs.ku.edu/PRS/publication/2004/OFR04_64/index.html
+- Objetivo 1: https://www.kaggle.com/datasets/imeintanis/well-log-facies-dataset
+- https://www.researchgate.net/publication/337403122_FaciesNet_Machine_Learning_Applications_for_Facies_- Classification_in_Well_Logs
+- https://kuscholarworks.ku.edu/bitstream/handle/1808/7060/DR_Overview_Dubois_etal.pdf?sequence=1
+- Objetivo 2: https://www.kaggle.com/code/ananth66/petrophysical-data-driven-analytics/notebook
+- https://wiki.seg.org/wiki/Facies_classification_using_machine_learning
+- https://wiki.seg.org/wiki/Seismic_petrophysics:_Part_2
+- https://wiki.seg.org/wiki/Seismic_petrophysics:_Part_2
+
+Otros recursos online:
+
+- https://rpubs.com/hllinas/R_Barras_ggplot_univariada
+- https://rpubs.com/hllinas/R_Barras_ggplot_grupo
+- https://myrbooksp.netlify.app/graph2.html
+- https://ggplot2.tidyverse.org/reference/scale_viridis.html
+- https://stackoverflow.com/questions/57530800/scale-fill-viridis-c-color-bar-on-a-log-scale
+- https://stackoverflow.com/questions/48210231/creating-a-vertical-color-gradient-for-a-geom-bar-plot
+- https://www.datanovia.com/en/blog/top-r-color-palettes-to-know-for-great-data-visualization/
+- https://towardsdatascience.com/singular-value-decomposition-with-example-in-r-948c3111aa43
+- https://rpubs.com/aaronsc32/singular-value-decomposition-r
+- https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/svd
+- https://www.displayr.com/singular-value-decomposition-in-r/
+- https://stats.oarc.ucla.edu/r/codefragments/svd_demos/
+- https://genomicsclass.github.io/book/pages/pca_svd.html
+- https://towardsdatascience.com/understanding-singular-value-decomposition-and-its-application-in-data-science-388a54be95d
+- https://www.geeksforgeeks.org/singular-value-decomposition-svd/
+- https://jonathan-hui.medium.com/machine-learning-singular-value-decomposition-svd-principal-component-analysis-pca-1d45e885e491
+- https://genomicsclass.github.io/book/pages/pca_svd.html
+- https://bio723-class.github.io/Bio723-book/singular-value-decomposition.html
