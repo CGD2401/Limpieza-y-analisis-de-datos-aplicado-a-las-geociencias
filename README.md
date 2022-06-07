@@ -41,7 +41,7 @@ Para más información sobre el origen de los datos se puede consultar la siguie
 
 ## Descripción de las variables del dataset:
 
-+ [Facies] (https://glossary.oilfield.slb.com/es/terms/f/facies):	Unidad litoestatrigráfica característica (target)
++ **Facies**: Unidad litoestatrigráfica característica (target)
 + **Formation**:	factor - categórica. Nombre de las formaciones geológicas divididas en 7 unidades estratigráficas C, B5, B4, B3, B2, B1, A1 cada una con un intervalo no marino (SH) sustentado por uno marino (LM).
 + **Well_Name**: Nombre de los pozos.
 + **Depth**: Profundidad de las mediciones (feet)
